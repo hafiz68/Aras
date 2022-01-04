@@ -331,6 +331,99 @@ const updatePass = async (req, res) => {
   }
 };
 
+const forgetPass = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const resp = await userService.userByMail(email);
+    if (resp.User.active == false)
+      return res
+        .status(400)
+        .send(
+          "you deleted your account against this email do you want to recover"
+        );
+    if (resp.error) return res.status(resp.error.code).send(resp.error.message);
+    if (!resp.User) return res.status(400).send("Incorrect email");
+    let randomCode = Math.floor(10000000 + Math.random() * 90000000);
+    console.log(randomCode);
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(randomCode.toString(), salt);
+    resp.User.userPassword = hashedPassword;
+    let newPass ={ userPassword : resp.User.userPassword}
+    console.log(hashedPassword);
+    const resp4 = await userService.updateUser(newPass , id);
+    if (resp4.error)
+      return res.status(resp4.error.code).send(resp4.error.message);
+    const resp3 = await mailService.sendingmail(email, randomCode.toString());
+    if (resp3?.error) return res.status(resp3.error.code).send(resp3.error.message);
+    return res.status(200).send("check your email for new");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong. Please try again");
+  }
+};
+
+const allCustomers = async (req, res) => {
+  try {
+    const resp = await userService.getUsers();
+    if (resp.error) return res.status(resp.error.code).send(resp.error.message);
+    if (!resp.users) return res.status(400).send("No user found");
+
+    resp.users = resp.users.map((user) => {
+      user = user.toJSON();
+      delete user.userPassword;
+      return user;
+    });
+    return res.status(200).send(resp.users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong. Please try again");
+  }
+};
+const getById = async (req, res) => {
+  let id = req.params.id;
+  try {
+    const resp = await userService.getUserById(id);
+    if (!resp.user) return res.status(400).send("No user found");
+
+    delete resp.user.userPassword;
+    return res.status(200).send(resp.user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong. Please try again");
+  }
+};
+
+const deleteUser = async (req, res) => {
+  let id = req.params.id;
+  const { token } = req.headers;
+  const { userEmail, userPassword } = req.body;
+  try {
+    const resp = await authService.toknVerification(token);
+    if (resp.error) return res.status(resp.error.code).send(resp.error.message);
+    console.log(resp.decoder);
+    if (id !== resp.decoder.id) return res.status(403).send("unautorized user");
+
+    const resp2 = await userService.getUserById(id);
+    if (resp2.error)return res.status(resp2.error.code).send(resp2.error.message);
+    if (!resp2.user || userEmail !== resp2.user.userEmail)
+      return res.status(403).send("unautorized user");
+    const resp3 = await authService.passwordVerification(
+      userPassword,
+      resp2.user.userPassword
+    );
+    if (resp3.error)
+      return res.status(resp3.error.code).send(resp3.error.message);
+    const resp4 = await userService.deleteUser(resp.decoder.id);
+    if (resp4.error)
+      return res.status(resp4.error.code).send(resp4.error.message);
+    return res.status(200).send(resp4.Message);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong. Please try again");
+  }
+};
+
+
 
 module.exports = {
   signup,
@@ -340,4 +433,8 @@ module.exports = {
   signInUser,
   updateUser,
   updatePass,
+  forgetPass,
+  allCustomers,
+  getById,
+  deleteUser
 };

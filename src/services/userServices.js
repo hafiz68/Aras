@@ -81,6 +81,29 @@ const updateUser = async(user, id) => {
         return {error: {message: "Something went wrong, try again", code: 500}};
     }
 };
+
+const getUsers = async()=>{
+    try{
+        let users = await Users.findAll({where:{active: true}});
+        
+         return  {users};
+    } catch(error){
+        console.log(error);
+        return {error: {message: "Something went wrong, try again", code: 500}};
+    }
+    
+};
+const deleteUser = async(id)=>{
+    try{
+        let user = await Users.update({active: false , deleteat: new Date()},{where:{id}});
+         return  {Message:"User deleted successfully"};
+    } catch(error){
+        console.log(error);
+        return {error: {message: "Something went wrong, try again", code: 500}};
+    }
+    
+};
+
 module.exports={
     createUser,
     userByMail,
@@ -89,5 +112,7 @@ module.exports={
     loginUpdate,
     destroyUser,
     getUserById,
-    updateUser
+    updateUser,
+    getUsers,
+    deleteUser
 }

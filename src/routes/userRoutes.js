@@ -11,7 +11,10 @@ router.post("/resendverifyEmail" , userController.resendVerifyMail);
 router.post("/signin",  userController.signInUser);
 router.put("/updateUser/:id",  userController.updateUser);
 router.put("/updatePass/:id",  userController.updatePass);
-
+router.put("/forgetPass",  userController.forgetPass);
+router.get("/allUsers",  userController.allCustomers);
+router.get("/userBYId/:id",  userController.getById);
+router.delete("/deleteUser/:id",  userController.deleteUser);
 
 
 

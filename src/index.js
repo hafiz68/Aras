@@ -3,8 +3,9 @@ const app = express();
 const cors = require ("cors");
 const sequelize = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
-const studRoutes = require('./routes/studentsRoutes')
-
+const studRoutes = require('./routes/studentsRoutes');
+const qualificationRoutes = require('./routes/qualificationRoutes');
+const employementRoutes = require('./routes/employementRoutes');
 
 
 const  {users, employement,jobs , qualification, students}  = require('./models');
@@ -12,6 +13,8 @@ app.use(cors());
 app.use(express.json());
 app.use("/alumini", userRoutes);
 app.use("/alumini", studRoutes);
+app.use("/alumini", qualificationRoutes);
+app.use("/alumini", employementRoutes);
 
 const dotenv = require('dotenv');
 dotenv.config();
