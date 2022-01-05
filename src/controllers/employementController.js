@@ -15,6 +15,7 @@ const createEmployement = async (req, res) =>{
         if(resp.error) return res.status(resp.error.code).send(resp.error.message);
         if(! resp.decoder.email) return res.status(403).send("Jason web token has not any email");
         const resp2 = await userService.userByMail(resp.decoder.email);
+        if (resp2.User.id !== resp.decoder.id) return res.status(400).send("unauthorised user");
         if (!resp2.User) return res.status(400).send("Please sign up first");
         if (resp2.error) return res.status(resp2.error.code).send(resp2.error.message);
         if (resp2.User.active == false)
@@ -38,6 +39,7 @@ const createEmployement = async (req, res) =>{
       }
 };
 const deleteEmployement = async (req, res) =>{
+  const {id} = req.params;
     const { token } = req.headers;
     try{
 
@@ -53,7 +55,10 @@ const deleteEmployement = async (req, res) =>{
             .send(
               "you deleted your account against this email do you want to recover"
             );
-        const resp3 = await employementServices.deleteEmployement(resp.decoder.id);
+        const resp4 = await employementServices.getemployementById(id);
+        if (resp4.error) return res.status(resp4.error.code).send(resp4.error.message);
+        if (resp4.employements.UserId !== resp.decoder.id && resp.decoder.role !== Admin) return res.status(403).send("unauthorised User");
+        const resp3 = await employementServices.deleteEmployement(id);
         if(resp3.error) return res.status(resp3.error.code).send(resp3.error.message);
         res.status(200).send("Qualification Deleted successfully");     
     }
@@ -63,7 +68,10 @@ const deleteEmployement = async (req, res) =>{
       }
 };
 const allEmployements = async (req, res) => {
-    try {
+  const { token } = req.headers;
+    try {const resp2 = await authService.toknVerification(token);
+      if(resp2.error) return res.status(resp2.error.code).send(resp2.error.message);
+      if(resp2.decoder.email !== Admin) return res.status(403).send("You are not authorised to do this action");
       const resp = await employementServices.getEmployements();
       if (resp.error) return res.status(resp.error.code).send(resp.error.message);
       return res.status(200).send(resp.employements);
@@ -118,6 +126,9 @@ const allEmployements = async (req, res) => {
             .send(
               "you deleted your account against this email do you want to recover"
             );
+            const resp4 = await employementServices.getemployementById(id);
+            if (resp4.error) return res.status(resp4.error.code).send(resp4.error.message);
+            if (resp4.employements.UserId !== resp.decoder.id && resp.decoder.role !== Admin) return res.status(403).send("unauthorised User");
         const qualification = {
             companyName, designation, startingYear, endingYear, city, country
         }

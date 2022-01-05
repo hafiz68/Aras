@@ -13,9 +13,9 @@ const createJob = async (req, res) =>{
 
         const resp = await authService.toknVerification(token);
         if(resp.error) return res.status(resp.error.code).send(resp.error.message);
+        if(! resp.decoder.email) return res.status(403).send("Jason web token has not any email");
         const validation = await Validation.createJobSchema.validate(req.body);
         if (validation.error) return res.status(403).json(validation.error.message);
-        if(! resp.decoder.email) return res.status(403).send("Jason web token has not any email");
         const resp2 = await userService.userByMail(resp.decoder.email);
         if (!resp2.User) return res.status(400).send("Please sign up first");
         if (resp2.error) return res.status(resp2.error.code).send(resp2.error.message);
@@ -40,6 +40,7 @@ const createJob = async (req, res) =>{
       }
 };
 const deleteJob = async (req, res) =>{
+  const {id} = req.params;
     const { token } = req.headers;
     try{
 
@@ -55,7 +56,9 @@ const deleteJob = async (req, res) =>{
             .send(
               "you deleted your account against this email do you want to recover"
             );
-        const resp3 = await jobServices.deleteJob(resp.decoder.id);
+        
+        
+        const resp3 = await jobServices.deleteJob(id);
         if(resp3.error) return res.status(resp3.error.code).send(resp3.error.message);
         res.status(200).send("Qualification Deleted successfully");     
     }
