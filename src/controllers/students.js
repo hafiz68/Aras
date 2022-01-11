@@ -66,7 +66,10 @@ const studentsByBatch = async (req,res)=>{
         const {batch} = req.body;
         const student = await studentServices.getStudentByBatch(batch);
         if(student.error)res.status(student.error).send(student.error.message);
-        return res.status(200).send(student)
+        let stud = student.student.map((item)=>{
+            return item.studentName
+            })
+        return res.status(200).send({student: stud})
     }
     catch(err) {
         console.error(err);

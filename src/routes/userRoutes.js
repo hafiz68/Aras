@@ -15,6 +15,8 @@ router.put("/forgetPass",  userController.forgetPass);
 router.get("/allUsers",  userController.allCustomers);
 router.get("/userBYId/:id",  userController.getById);
 router.delete("/deleteUser/:id",  userController.deleteUser);
+router.post("/uploadPicture",  userController.updateProfilePicture);
+
 
 
 

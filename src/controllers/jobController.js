@@ -56,8 +56,9 @@ const deleteJob = async (req, res) =>{
             .send(
               "you deleted your account against this email do you want to recover"
             );
-        
-        
+        const resp4 = await jobServices.getJobById(id);
+        if(resp4.error) return res.status(resp4.error.code).send(resp4.error.message);
+        if(resp4.jobs.UserId !== resp.decoder.id && resp.decoder.role !== Admin)res.status(403).send("Unauthorised Person");
         const resp3 = await jobServices.deleteJob(id);
         if(resp3.error) return res.status(resp3.error.code).send(resp3.error.message);
         res.status(200).send("Qualification Deleted successfully");     

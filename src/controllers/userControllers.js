@@ -2,7 +2,7 @@ const userService = require("../services/userServices");
 const authService = require("../services/authServices");
 const mailService = require("../services/mailServices");
 const Validation = require("../validation/usersValidations");
-const fs = require('fs')
+const fs = require('fs');
 
 const { v4 } = require("uuid");
 const uuid = v4;
@@ -218,8 +218,10 @@ const signInUser = async (req, res) => {
   try {
     const resp = await userService.userByMail(userEmail);
     if (!resp.User) return res.status(400).send("User not found");
-    if (resp.User.verifyStudent === false || resp.User.verifyStudent === false)
-      return res.status(400).send("User not found");
+    if (resp.User.verifyStudent === false )
+      return res.status(400).send("Verify your mail");
+      if (resp.User.verifyAdmin === false )
+      return res.status(400).send("Ask admin to verify and send verify email again");
     if (resp.error) return res.status(resp.error.code).send(resp.error.message);
     if (resp.User.deleteat != null && !resp.User.active) {
       let deletedDate = resp.User.deleteat;
@@ -423,6 +425,58 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const updateProfilePicture = async (req, res) => {
+  const { token } = req.headers;
+ try{
+  const resp = await authService.toknVerification(token);
+  if (resp.error) return res.status(resp.error.code).send(resp.error.message);
+  console.log(resp.decoder);
+  if ( !resp.decoder.id) return res.status(403).send("unautorized user");
+
+  const resp2 = await userService.getUserById(resp.decoder.id);
+  if (resp2.error)return res.status(resp2.error.code).send(resp2.error.message);
+  if (!req.files) return res.status(500).send({ message: 'Please select a file.' });
+  const profilePic = req.files.img;
+  const splitArray = req.files.img.name.split('.');
+  const extension = req.files.img.name.split('.')[splitArray.length - 1];
+  profilePic.name = `profile-${uuid()}.${extension}`
+  let pictureSaved = true;
+  const path = __dirname + "../uploads/" + profilePic.name;
+  profilePic.mv(path, (err) => {
+    if (err) {
+      console.log(err)
+      pictureSaved = false;
+    }
+  })
+
+  if (!pictureSaved) {
+    return res.status(500).send({ message: 'Couldn\'t update profile picture. 1' })
+  }
+  let oldDeleted = true;
+  if (user.image) {
+    fs.unlink(__dirname + '/../uploads/' + user.image, (err) => {
+      if (err) {
+        console.log(err)
+        oldDeleted = false;
+      }
+    })
+  }
+  if (!oldDeleted) {
+    return res.status(500).send({ message: 'Couldn\'t update profile picture. 2' })
+  }
+  
+  resp2.user.image = profilePic.name;
+  
+  const resp4 = await userService.updateUser(resp2.user.image , resp.decoder.id);
+    if (resp4.error)
+      return res.status(resp4.error.code).send(resp4.error.message);
+    return res.status(200).send({ updatedUser: resp4.updatedUser });
+ }  catch (err) {
+  console.error(err);
+  res.status(500).send("Something went wrong. Please try again");
+}
+}
+
 
 
 module.exports = {
@@ -436,5 +490,6 @@ module.exports = {
   forgetPass,
   allCustomers,
   getById,
-  deleteUser
+  deleteUser,
+  updateProfilePicture
 };

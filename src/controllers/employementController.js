@@ -2,6 +2,7 @@ const authService = require("../services/authServices");
 const Validation = require("../validation/usersValidations");
 const employementServices = require('../services/empolyementServices');
 const userService = require("../services/userServices");
+const fs = require('fs')
 
 const { v4 } = require("uuid");
 const uuid = v4;
