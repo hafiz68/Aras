@@ -430,9 +430,7 @@ const updateProfilePicture = async (req, res) => {
  try{
   const resp = await authService.toknVerification(token);
   if (resp.error) return res.status(resp.error.code).send(resp.error.message);
-  console.log(resp.decoder);
   if ( !resp.decoder.id) return res.status(403).send("unautorized user");
-
   const resp2 = await userService.getUserById(resp.decoder.id);
   if (resp2.error)return res.status(resp2.error.code).send(resp2.error.message);
   if (!req.files) return res.status(500).send({ message: 'Please select a file.' });
@@ -441,10 +439,10 @@ const updateProfilePicture = async (req, res) => {
   const extension = req.files.img.name.split('.')[splitArray.length - 1];
   profilePic.name = `profile-${uuid()}.${extension}`
   let pictureSaved = true;
-  const path = __dirname + "../uploads/" + profilePic.name;
+  const path = __dirname + "/uploads/" + profilePic.name;
   profilePic.mv(path, (err) => {
     if (err) {
-      console.log(err)
+      console.log(+ err)
       pictureSaved = false;
     }
   })
@@ -453,8 +451,8 @@ const updateProfilePicture = async (req, res) => {
     return res.status(500).send({ message: 'Couldn\'t update profile picture. 1' })
   }
   let oldDeleted = true;
-  if (user.image) {
-    fs.unlink(__dirname + '/../uploads/' + user.image, (err) => {
+  if (resp2.user.profilePic) {
+    fs.unlink(__dirname + '/uploads/' + resp2.user.profilePic, (err) => {
       if (err) {
         console.log(err)
         oldDeleted = false;
@@ -465,9 +463,9 @@ const updateProfilePicture = async (req, res) => {
     return res.status(500).send({ message: 'Couldn\'t update profile picture. 2' })
   }
   
-  resp2.user.image = profilePic.name;
+ const userPic = {profilePic : profilePic.name};
   
-  const resp4 = await userService.updateUser(resp2.user.image , resp.decoder.id);
+  const resp4 = await userService.updateUser(userPic , resp.decoder.id);
     if (resp4.error)
       return res.status(resp4.error.code).send(resp4.error.message);
     return res.status(200).send({ updatedUser: resp4.updatedUser });
